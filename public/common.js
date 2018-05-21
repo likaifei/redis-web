@@ -27,7 +27,7 @@ layui.use(['element','layer', 'form'], function(){
     
     Vue.component('key-item', {
         template: '\
-        <li class="layui-btn" v-on:click="$emit(\'get\')">\
+        <li style="width:45%;margin:5px;" class="layui-btn" v-on:click="$emit(\'get\')">\
         {{ name }}\
         </li>\
         ',
