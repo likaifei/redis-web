@@ -5,7 +5,7 @@ layui.use(['element','layer', 'form'], function(){
         template: '\
         <li v-bind:lay-id="name">\
         {{ name }}\
-        <span title="ttl" class="layui-badge layui-bg-gray">{{ ttl }}</span>\
+        <span title="ttl" v-on:click="$emit(\'setttl\')" class="layui-badge layui-bg-gray">{{ ttl }}</span>\
         <span title="size" class="layui-badge layui-bg-gray">{{ size }}</span>\
         <span v-on:click="$emit(\'refresh\')">&nbsp;<i class="layui-icon layui-icon-refresh-1"></i></span>\
         <span title="remove" class="layui-badge layui-bg-gray" v-on:click="$emit(\'remove\')">X</span>\
@@ -52,7 +52,11 @@ layui.use(['element','layer', 'form'], function(){
         keys: [
         ]
     }
-
+    var ttlData = {
+        ttl : -1,
+        show : false,
+        key : ''
+    }
 
     function cmd(method, args){
         if(typeof(args) != 'object') args = [args]
@@ -181,6 +185,41 @@ layui.use(['element','layer', 'form'], function(){
             layer.msg(err.response.data)
         })
     } 
+    //ttl框,透明底框
+    new Vue({
+        el : "#fade",
+        data: ttlData
+    })
+    //ttl框,主框
+    function focusText(_self){
+        return function(){
+            _self.$refs.t_ttl.focus()
+            _self.$refs.t_ttl.select()
+        }
+    }
+    new Vue({
+        el : "#light",
+        data: ttlData,
+        watch:{
+            show:function(){
+                if(this.show) setTimeout(focusText(this),100)
+            }
+        },
+        methods:{
+            ok:function(){
+                this.show = false
+                cmd('EXPIRE', [this.key, this.ttl]).then((r)=>{
+                    if(r.data.success) return layer.msg('设置TTL 成功!')
+                    layer.msg(r.data.msg)
+                }).catch((e)=>{
+                    layer.msg(e.data)
+                })
+            },
+            cancel:function(){
+                this.show = false
+            }
+        }
+    })
 
     //命令框
     new Vue({
@@ -212,6 +251,11 @@ layui.use(['element','layer', 'form'], function(){
         methods: {
             refresh: function(key){
                 getKey(key)
+            },
+            setttl: function(key, ttl){
+                ttlData.key = key
+                ttlData.ttl = ttl
+                ttlData.show = true
             }
         }
     })
