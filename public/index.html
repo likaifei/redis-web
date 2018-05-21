@@ -7,14 +7,31 @@
   <link rel="stylesheet" href="./layui/css/layui.css">
   </head>
   <body>
-  <div class="layui-container layui-col-space10">
-      <div class="layui-row layui-col-space10 layui-row-space10">
+  <div class="layui-container layui-col-space10"  style="width: 100%;height: 100%;">
+      <div class="layui-row layui-col-space10 layui-row-space10"  style="height: 700px;">
       <div class="layui-col-md3" style="background-color: #2F4056;">
+          <div id= "naav">
+            <ul>
+                    <li style="float:left;margin:5px">
+                            <a class="layui-btn" v-on:click="showSub = !showSub">更换数据库</a>
+                            <dl style="position:absolute;" v-if="showSub">
+                                    <dd class="layui-btn layui-bg-black"
+                                        v-for="db in dbs"
+                                        v-on:click="changeDB(db)">
+                                        {{ db }}</dd>
+                            </dl>
+                    </li>
+                    <li style="float:left;margin:5px"><button class="layui-btn" v-on:click="refreshKeys">
+                            刷新
+                        </button>
+                    </li>
+                    <li style="float:left;margin:5px;visibility: hidden;"><button class="layui-btn">
+                            刷新
+                        </button></li>
+              </ul>
+            </div>
           <div id="key-list">
-              <button class="layui-btn" v-on:click="refreshKeys">
-                  刷新
-              </button>
-              <ul>
+                <ul>
                   <li
                       is="key-item"
                       v-for="(key, index) in keys"
@@ -26,8 +43,8 @@
               </ul>
           </div>
       </div>
-      <div class="layui-col-md8 layui-bg-green">
-          <div class="layui-tab" id="mainTab" >
+      <div class="layui-col-md9 layui-bg-green" style="height: 700px;">
+          <div class="layui-tab" id="mainTab" lay-filter="tab">
           <ul class="layui-tab-title">
       <li
           is="key-tab"
@@ -36,7 +53,7 @@
           v-on:remove="keys.splice(key,1)"
           ></li>
           </ul>
-          <div class="layui-tab-content" style="height: 300px;">
+          <div class="layui-tab-content">
       <div
           is="key-info"
           v-for="(key, index) in keys"
@@ -49,11 +66,11 @@
 
       <div class="layui-row" id="exec">
         <input v-model="cmd"
-               style="background-color: #d2d2d2;"
+               style="background-color: #d2d2d2;width: 100%;"
                v-on:keyup.enter="exec"
                placeholder="exec command"
                >
-               <textarea style="background-color: #d2d2d2;width: 100%; height: 150px;" v-model="result"
+               <textarea id="t_result" style="background-color: #d2d2d2;width: 100%; height: 150px;" v-model="result"
                placeholder="result will show here"
                >
                </textarea>

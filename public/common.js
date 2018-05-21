@@ -3,7 +3,7 @@ layui.use(['element','layer', 'form'], function(){
     var element = layui.element
     Vue.component('key-tab', {
         template: '\
-        <li>\
+        <li v-bind:lay-id="name">\
         {{ name }}\
         <button v-on:click="$emit(\'remove\')">X</button>\
         </li>\
@@ -12,14 +12,14 @@ layui.use(['element','layer', 'form'], function(){
     })
     Vue.component('key-info', {
         template: '\
-        <div class="layui-tab-item">\
-        <ul>\
-        <li\
+        <div class="layui-tab-item" style="overflow:auto;height:600px">\
+        <table style="word-wrap:break-word;word-break:break-all;width:95%" border="1"><tr><th>key</th><th>value</th></tr>\
+        <tr\
             v-for="(v, key) in context"\
             >\
-        {{ key }} : {{ v }} \
-        </li>\
-        </ul>\
+        <td>{{ key }}</td><td>{{ v }}</td> \
+        </tr>\
+        </table>\
         </div>\
         ',
         props: ['context']
@@ -54,8 +54,8 @@ layui.use(['element','layer', 'form'], function(){
 
 
     function cmd(method, args){
-        if(typeof(args) == 'string') args = [args]
-        cmdData.result += method + args.join(' ') + '\n'
+        if(typeof(args) != 'array') args = [args]
+        cmdData.result += method + ' ' + args.join(' ') + '\n'
         return axios.post('/', {
             method: method,
             args: args
@@ -85,6 +85,12 @@ layui.use(['element','layer', 'form'], function(){
                 "type": 'string'
             })
             }
+            function later(filter, key){
+                return function(){
+                    element.tabChange('tab', key)
+                }
+            }
+            setTimeout(later('tab', key),300)
         }).catch((e)=>{layer.msg(e.data)})
     }
 
@@ -101,11 +107,11 @@ layui.use(['element','layer', 'form'], function(){
            if(type == 'string'){
             showKey(key, 'get', key)
            }else if(type == 'list'){
-            showKey(key, 'lrange', [key, 0, 999])
+            showKey(key, 'lrange', [key, 0, 99])
            }else if(type == 'hash'){
             showKey(key, 'hgetall', key)
            }else if(type == 'zset'){
-            showKey(key, 'zrange', [key, 0, 999, 'WITHSCORES'])
+            showKey(key, 'zrange', [key, 0, 99, 'WITHSCORES'])
            }else{
                layer.msg('unknow type: ' + type)
            }
@@ -134,7 +140,7 @@ layui.use(['element','layer', 'form'], function(){
         data:cmdData,
         methods: {
             exec: function(){
-                var args = this.cmd.split(' ')
+                var args = this.cmd.trim().split(' ')
                 var method = args.shift()
                 var self = this
                 cmd(method, args).then((r)=>{
@@ -143,7 +149,11 @@ layui.use(['element','layer', 'form'], function(){
                 }).catch((e)=>{
                     self.result += JSON.stringify(e.data)
                 })
-        }
+        }},
+        watch:{
+            result: function(){
+                this.$el.children[1].scrollTop = this.$el.children[1].scrollHeight
+            }
         }
     })
 
@@ -154,7 +164,26 @@ layui.use(['element','layer', 'form'], function(){
         methods: {
         }
     })
-
+    new Vue({
+        el: '#naav',
+        data:{
+            showSub: false,
+            dbs:[0,1,2,3,4,5,6,7,8,9,10]
+        },
+        methods: {
+            refreshKeys: refreshKeys,
+            changeDB: function(db){
+                this.showSub = false
+                cmd('select', db).then((r)=>{
+                    if(r.data.success) return layer.msg('切换成功')
+                    layer.msg('切换失败: ' + r.data.msg)
+                }).catch((e)=>{
+                    layer.msg(e.data)
+                })
+            },
+        }
+    })
+    
     new Vue({
         el: '#key-list',
         data:keyList,
@@ -168,6 +197,7 @@ layui.use(['element','layer', 'form'], function(){
             },
             refreshKeys: refreshKeys,
             getKey: getKey,
+            
             remove: function(key){
                 cmd('del', key).then((r)=>{
                     if(r.data.success)return refreshKeys()
