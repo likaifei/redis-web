@@ -42,7 +42,7 @@ layui.use(['element','layer', 'form'], function(){
         result: ''
     }
     var keyList = {
-        newkey: '',
+        filter: '',
         keys: [
             {
             },
@@ -291,13 +291,16 @@ layui.use(['element','layer', 'form'], function(){
         methods: {
             refreshKeys: refreshKeys,
             getKey: getKey,
-            remove: function(key){
-                cmd('del', key).then((r)=>{
-                    if(r.data.success)return refreshKeys()
-                    layer.msg(r.data.msg)
-                }).catch((e)=>{
-                    layer.msg(e.data)
-                })
+        },
+        computed:{
+            filted: function(){
+                var filtedKeys = this.keys.slice()
+                var filter = this.filter.trim()
+                if(filter == '') return filtedKeys
+                for(var i = filtedKeys.length - 1; i >= 0; i--){
+                    if(filtedKeys[i].name.indexOf(filter) == -1) filtedKeys.splice(i, 1)
+                }
+                return filtedKeys
             }
         }
     })
