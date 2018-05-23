@@ -4,14 +4,34 @@ layui.use(['element','layer', 'form'], function(){
     Vue.component('key-tab', {
         template: '\
         <li v-bind:lay-id="name">\
-        {{ name }}\
+        <span :title="t_cmd" @dblclick="edit" v-if="!editing">{{ name }}</span>\
+        <input v-model="t_cmd" v-if="editing" @keyup.enter="edit" @blur="cancel">\
         <span title="ttl" v-on:click="$emit(\'setttl\')" class="layui-badge layui-bg-gray">{{ ttl }}</span>\
         <span title="size" class="layui-badge layui-bg-gray">{{ size }}</span>\
         <span v-on:click="$emit(\'refresh\')">&nbsp;<i class="layui-icon layui-icon-refresh-1"></i></span>\
         <span title="remove" class="layui-badge layui-bg-gray" v-on:click="$emit(\'remove\')">X</span>\
         </li>\
         ',
-        props: ['name','size','ttl']
+        props: ['name','size','ttl','cmd','index'],
+        data: function(){
+            return{ t_cmd: this.cmd, editing: false}
+        },
+        methods:{
+            edit: function(){
+                this.editing = !this.editing
+                if(!this.editing){
+                    this.$emit('edit',this.index, this.t_cmd)
+                }else{
+                    this.$nextTick(function(){
+                        this.$el.firstElementChild.focus()
+                    })
+                }
+                
+            },
+            cancel: function(){
+                this.editing = !this.editing
+            }
+        }
     })
     Vue.component('key-info', {
         template: '\
@@ -71,6 +91,9 @@ layui.use(['element','layer', 'form'], function(){
         cmd(method, args).then((r)=>{
             if(typeof(r.data.data)=='string')r.data.data = [r.data.data]
             var index = -1
+            var t_cmd = args.slice()
+            t_cmd.unshift(method)
+            t_cmd = t_cmd.join(' ')
             for(var i = 0; i < keyData.keys.length; i++){
                 if(keyData.keys[i].name == key){
                     index=i
@@ -81,7 +104,8 @@ layui.use(['element','layer', 'form'], function(){
                 keyData.keys.push( {
                 "name": key,
                 "data": r.data.data,
-                "type": 'string',
+                "type": type,
+                "cmd": t_cmd,
                 "ttl": '--',
                 "size": '--'
             })
@@ -89,7 +113,8 @@ layui.use(['element','layer', 'form'], function(){
                 Vue.set(keyData.keys, index, {
                 "name": key,
                 "data": r.data.data,
-                "type": 'string',
+                "type": type,
+                "cmd": cmd,
                 "ttl": '--',
                 "size": '--'
             })
@@ -145,22 +170,25 @@ layui.use(['element','layer', 'form'], function(){
         return -1
     }
 
-    function getKey(key, type = 'none'){
+    function getKey(key, type = 'none', method = null, args = null){
         if(type == 'none'){
             return cmd('type', key).then(function(result){
                 var data = result.data
-                if(data.data != 'none')return getKey(key, data.data)
+                if(data.data != 'none')return getKey(key, data.data, method, args)
                 layer.msg('error type: ' + data.data)
             }).catch(function(err){
                 layer.msg(err)
             })
         }else{
+            if(method && args){
+                return showKey(key, type, method, args)
+            }
            if(type == 'string'){
-            showKey(key, type, 'get', key)
+            showKey(key, type, 'get', [key])
            }else if(type == 'list'){
             showKey(key, type, 'lrange', [key, 0, 99])
            }else if(type == 'hash'){
-            showKey(key, type, 'hgetall', key)
+            showKey(key, type, 'hgetall', [key])
            }else if(type == 'zset'){
             showKey(key, type, 'zrange', [key, 0, 99, 'WITHSCORES'])
            }else{
@@ -256,6 +284,11 @@ layui.use(['element','layer', 'form'], function(){
                 ttlData.key = key
                 ttlData.ttl = ttl
                 ttlData.show = true
+            },
+            edit: function(index, t_cmd){
+                var args = t_cmd.trim().split(' ')
+                var method = args.shift()
+                getKey(args[0], 'none', method, args)
             }
         }
     })
