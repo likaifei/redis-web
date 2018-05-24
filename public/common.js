@@ -4,9 +4,10 @@ layui.use(['element','layer', 'form'], function(){
     Vue.component('key-tab', {
         template: '\
         <li v-bind:lay-id="name">\
-        <span :title="t_cmd" @dblclick="edit" v-if="!editing">{{ name }}</span>\
-        <input v-model="t_cmd" v-if="editing" @keyup.enter="edit" @blur="cancel">\
-        <span title="ttl" v-on:click="$emit(\'setttl\')" class="layui-badge layui-bg-gray">{{ ttl }}</span>\
+        <span :title="t_cmd" @dblclick="edit(true)" v-if="!editing">{{ name }}</span>\
+        <input v-model="t_cmd" v-if="editing" @keyup.enter="edit(false)" @blur="cancel">\
+        <span title="ttl" v-on:click="changettl(true)" class="layui-badge layui-bg-gray" v-if="!editttl">{{ ttl }}</span>\
+        <input v-model="t_ttl" v-if="editttl" @blur="cancel" @keyup.enter="changettl(false)">\
         <span title="size" class="layui-badge layui-bg-gray">{{ size }}</span>\
         <span v-on:click="$emit(\'refresh\')">&nbsp;<i class="layui-icon layui-icon-refresh-1"></i></span>\
         <span title="remove" class="layui-badge layui-bg-gray" v-on:click="$emit(\'remove\')">X</span>\
@@ -14,12 +15,12 @@ layui.use(['element','layer', 'form'], function(){
         ',
         props: ['name','size','ttl','cmd','index'],
         data: function(){
-            return{ t_cmd: this.cmd, editing: false}
+            return{ t_cmd: this.cmd, editing: false, editttl: false,t_ttl: this.ttl}
         },
         methods:{
-            edit: function(){
-                this.editing = !this.editing
-                if(!this.editing){
+            edit: function(tof){
+                this.editing = tof
+                if(!tof){
                     this.$emit('edit',this.index, this.t_cmd)
                 }else{
                     this.$nextTick(function(){
@@ -28,8 +29,24 @@ layui.use(['element','layer', 'form'], function(){
                 }
                 
             },
+            changettl:function(tof){
+                this.editttl = tof
+                if(!tof){
+                    this.$emit('setttl',this.name, this.t_ttl)
+                }else{
+                    this.$nextTick(function(){
+                        this.$el.childNodes[6].select()
+                    })
+                }
+            },
             cancel: function(){
                 this.editing = false
+                this.editttl = false
+            }
+        },
+        watch:{
+            ttl:function(){
+                this.t_ttl = this.ttl
             }
         }
     })
@@ -213,42 +230,7 @@ layui.use(['element','layer', 'form'], function(){
             layer.msg(err.response.data)
         })
     } 
-    //ttl框,透明底框
-    new Vue({
-        el : "#fade",
-        data: ttlData
-    })
-    //ttl框,主框
-    function focusText(_self){
-        return function(){
-            _self.$refs.t_ttl.focus()
-            _self.$refs.t_ttl.select()
-        }
-    }
-    new Vue({
-        el : "#light",
-        data: ttlData,
-        watch:{
-            show:function(){
-                if(this.show) setTimeout(focusText(this),100)
-            }
-        },
-        methods:{
-            ok:function(){
-                this.show = false
-                cmd('EXPIRE', [this.key, this.ttl]).then((r)=>{
-                    if(r.data.success) return layer.msg('设置TTL 成功!')
-                    layer.msg(r.data.msg)
-                }).catch((e)=>{
-                    layer.msg(e.data)
-                })
-            },
-            cancel:function(){
-                this.show = false
-            }
-        }
-    })
-
+  
     //命令框
     new Vue({
         el: '#exec',
@@ -280,10 +262,17 @@ layui.use(['element','layer', 'form'], function(){
             refresh: function(key){
                 getKey(key)
             },
-            setttl: function(key, ttl){
-                ttlData.key = key
-                ttlData.ttl = ttl
-                ttlData.show = true
+            setttl: function(key, t_ttl){
+                cmd('EXPIRE', [key, t_ttl]).then((r)=>{
+                    if(r.data.success){
+                        ttl(key)
+                        return layer.msg('设置TTL 成功!')
+                    } 
+                    layer.msg(r.data.msg)
+                    
+                }).catch((e)=>{
+                    layer.msg(e.data)
+                })
             },
             edit: function(index, t_cmd){
                 var args = t_cmd.trim().split(' ')
