@@ -29,7 +29,7 @@ layui.use(['element','layer', 'form'], function(){
                 
             },
             cancel: function(){
-                this.editing = !this.editing
+                this.editing = false
             }
         }
     })
