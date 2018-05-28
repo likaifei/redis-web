@@ -1,6 +1,9 @@
 layui.use(['element','layer', 'form'], function(){
+    //弹框提示依赖
     var layer = layui.layer
+    //选项卡依赖
     var element = layui.element
+    //选项卡模板
     Vue.component('key-tab', {
         template: '\
         <li v-bind:lay-id="name">\
@@ -18,6 +21,7 @@ layui.use(['element','layer', 'form'], function(){
             return{ t_cmd: this.cmd, editing: false, editttl: false,t_ttl: this.ttl}
         },
         methods:{
+            //修改命令并执行  在命令框敲回车触发
             edit: function(tof){
                 this.editing = tof
                 if(!tof){
@@ -29,6 +33,7 @@ layui.use(['element','layer', 'form'], function(){
                 }
                 
             },
+            //修改过期时间
             changettl:function(tof){
                 this.editttl = tof
                 if(!tof){
@@ -39,17 +44,20 @@ layui.use(['element','layer', 'form'], function(){
                     })
                 }
             },
+            //取消编辑, 焦点离开输入框时触发
             cancel: function(){
                 this.editing = false
                 this.editttl = false
             }
         },
         watch:{
+            //监听过期时间变化, 触发更新
             ttl:function(){
                 this.t_ttl = this.ttl
             }
         }
     })
+    //数据显示模板
     Vue.component('key-info', {
         template: '\
         <div class="layui-tab-item" style="overflow:auto;height:600px">\
@@ -64,7 +72,7 @@ layui.use(['element','layer', 'form'], function(){
         ',
         props: ['context']
     })
-    
+    //键列表模板
     Vue.component('key-item', {
         template: '\
         <li style="width:45%;margin:5px;" class="layui-btn" v-on:click="$emit(\'get\')">\
@@ -73,11 +81,12 @@ layui.use(['element','layer', 'form'], function(){
         ',
         props: ['name']
     })
-
+    //命令行数据
     var cmdData = {
         cmd : '',
         result: ''
     }
+    //键列表数据
     var keyList = {
         filter: '',
         keys: [
@@ -85,16 +94,12 @@ layui.use(['element','layer', 'form'], function(){
             },
         ],
     }
+    //键数据
     var keyData = {
         keys: [
         ]
     }
-    var ttlData = {
-        ttl : -1,
-        show : false,
-        key : ''
-    }
-
+    //封装命令请求
     function cmd(method, args){
         if(typeof(args) != 'object') args = [args]
         cmdData.result += method + ' ' + args.join(' ') + '\n'
@@ -103,7 +108,7 @@ layui.use(['element','layer', 'form'], function(){
             args: args
         })
     }
-
+    //命令返回后显示到数据区域
     function showKey(key, type, method, args){
         cmd(method, args).then((r)=>{
             if(typeof(r.data.data)=='string')r.data.data = [r.data.data]
@@ -145,7 +150,7 @@ layui.use(['element','layer', 'form'], function(){
             setTimeout(later('tab', key),300)
         }).catch((e)=>{layer.msg(e.data)})
     }
-
+    //获取过期时间及键大小
     function ttl(key, type){
         var index
         cmd('ttl', key).then((r)=>{
@@ -173,11 +178,12 @@ layui.use(['element','layer', 'form'], function(){
             })
         }
     }
-
+    //设置键数据的某个字段
     function setData(key, method, value){
         var index = findIndex(key)
         if(key != -1) keyData.keys[index][method] = value
     }
+    //查找某键在键数据的index
     function findIndex(key){
         for(var i = 0; i < keyData.keys.length; i++){
             if(keyData.keys[i].name == key){
@@ -186,7 +192,7 @@ layui.use(['element','layer', 'form'], function(){
         }
         return -1
     }
-
+    //获取某个键的数据
     function getKey(key, type = 'none', method = null, args = null){
         if(type == 'none'){
             return cmd('type', key).then(function(result){
@@ -214,7 +220,7 @@ layui.use(['element','layer', 'form'], function(){
 
         }
     }
-    
+    //更新键列表
     function refreshKeys(){
         cmd("keys", "*").then(function(response){
             if(response.status == 200 && response.data.success){
@@ -231,11 +237,12 @@ layui.use(['element','layer', 'form'], function(){
         })
     } 
   
-    //命令框
+    //初始化命令框
     new Vue({
         el: '#exec',
         data:cmdData,
         methods: {
+            //执行命令行文本
             exec: function(){
                 var args = this.cmd.trim().split(' ')
                 var method = args.shift()
@@ -248,20 +255,23 @@ layui.use(['element','layer', 'form'], function(){
                 })
         }},
         watch:{
+            //监听返回数据变动,显示到数据尾
             result: function(){
                 this.$el.children[1].scrollTop = this.$el.children[1].scrollHeight
             }
         }
     })
 
-    //信息选项卡
+    //初始化键选项卡
     new Vue({
         el: '#mainTab',
         data:keyData,
         methods: {
+            //更新一个键
             refresh: function(key){
                 getKey(key)
             },
+            //设置一个键的过期时间
             setttl: function(key, t_ttl){
                 cmd('EXPIRE', [key, t_ttl]).then((r)=>{
                     if(r.data.success){
@@ -274,6 +284,7 @@ layui.use(['element','layer', 'form'], function(){
                     layer.msg(e.data)
                 })
             },
+            //修改一个键的查询命令并执行
             edit: function(index, t_cmd){
                 var args = t_cmd.trim().split(' ')
                 var method = args.shift()
@@ -287,10 +298,12 @@ layui.use(['element','layer', 'form'], function(){
         el: '#naav',
         data:{
             showSub: false,
-            dbs:[0,1,2,3,4,5,6,7,8,9,10]
+            dbs:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
         },
         methods: {
+            //更新键列表
             refreshKeys: refreshKeys,
+            //修改数据库
             changeDB: function(db){
                 this.showSub = false
                 cmd('select', db).then((r)=>{
@@ -315,6 +328,7 @@ layui.use(['element','layer', 'form'], function(){
             getKey: getKey,
         },
         computed:{
+            //键列表筛选
             filted: function(){
                 var filtedKeys = this.keys.slice()
                 var filter = this.filter.trim()
@@ -326,6 +340,6 @@ layui.use(['element','layer', 'form'], function(){
             }
         }
     })
-
+ //页面完成后更新一次键列表
  refreshKeys()
 });

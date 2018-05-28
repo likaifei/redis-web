@@ -14,9 +14,13 @@ document.body.addEventListener('input', POWERMODE);
   </head>
   <body>
 
+<!-- 主区域 -->
   <div class="layui-container layui-col-space10"  style="width: 100%;height: 100%;">
+      <!-- 列表及数据区域 -->
       <div class="layui-row layui-col-space10 layui-row-space10"  style="height: 700px;">
+          <!-- 列表 -->
       <div class="layui-col-md3" style="background-color: #2F4056;">
+          <!-- 选择数据库区域 -->
           <div id= "naav">
             <ul>
                     <li style="float:left;margin:5px">
@@ -37,6 +41,7 @@ document.body.addEventListener('input', POWERMODE);
                         </button></li>
               </ul>
             </div>
+<!-- 主列表 -->
           <div id="key-list">
               <input v-model="filter" style="width:100%;overflow: auto;">
                 <ul style="overflow: auto;height: 800px">
@@ -51,7 +56,9 @@ document.body.addEventListener('input', POWERMODE);
               </ul>
           </div>
       </div>
+      <!-- 数据区域 -->
       <div class="layui-col-md9 layui-bg-green" style="height: 700px;">
+          <!-- 选项卡区域 -->
           <div class="layui-tab" id="mainTab" lay-filter="tab">
           <ul class="layui-tab-title">
       <li
@@ -68,6 +75,7 @@ document.body.addEventListener('input', POWERMODE);
           v-on:setttl="setttl"
           ></li>
           </ul>
+          <!-- 数据显示区域 -->
           <div class="layui-tab-content">
       <div
           is="key-info"
@@ -78,13 +86,15 @@ document.body.addEventListener('input', POWERMODE);
 
       </div>
       </div>
-
+<!-- 命令行 -->
       <div class="layui-col-md9" id="exec" style="width: 70%;">
+          <!-- 输入区 -->
         <input v-model="cmd"
                style="background-color: #d2d2d2;width: 100%;"
                v-on:keyup.enter="exec"
                placeholder="exec command"
                >
+               <!-- 输出区 -->
                <textarea id="t_result" style="background-color: #d2d2d2;width: 100%;height: 150px;" v-model="result"
                placeholder="result will show here"
                >
@@ -92,9 +102,13 @@ document.body.addEventListener('input', POWERMODE);
       </div>
       </div>
   </div>
+  <!-- layui 主要用选项卡样式及弹出提示 -->
   <script src="./layui/layui.js"></script>
+  <!-- 主要实现使用了Vue -->
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <!-- 数据请求js -->
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <!-- js实现 -->
   <script src="./common.js"></script>
   </body>
   </html>
